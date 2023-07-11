@@ -83,7 +83,7 @@
  const save_OSF = {
   type: jsPsychPipe,
   action: "save",
-  experiment_id: "nVcW1DJVPWXq",
+  experiment_id: "yZM1Kp22W5I0",
   filename: filename,
   data_string: ()=>jsPsych.data.get().csv()
 };
@@ -118,7 +118,7 @@ var JOS_anagram = {
     data: {trial_name: "present_anagram"},
     stimulus: function(){
       
-            reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 5)
+            reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 3)
       primed_array = [];
         if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
         if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
@@ -221,7 +221,7 @@ var Control_anagram = {
     data: {trial_name: "present_anagram"},
     stimulus: function(){
 
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 5)
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 3)
       primed_array = [];
         if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
         if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
