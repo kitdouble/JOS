@@ -65,7 +65,7 @@
 
 // Global variables
  var trialnum = 1;
-
+var  practice_trial = 1;
 
 
 
@@ -101,12 +101,15 @@ var instructions = {
     pages: [
     '<h2>Instructions</h2>In this study you will be shown a 5-letter English word that has been scrambled (an anagram).<br>Your job is to try and rearrange it to make the original word.',
     'For example, if you are shown the string:<br><strong>AEROP</strong><br><nr> Rearrange it to make a word that make sense in English<br>In this case you would type in the unscrambled word:<br><strong>OPERA</strong>',
-    'Before seeing each anagram, you will get a quick preview where only a few of the letters are revealed.',
+    'Before seeing each anagram, you will get a quick preview where <strong>EITHER</strong> a few of the letters are revealed or none of the letters are revealed.',
     ],
     show_clickable_nav: true
 }
 
 
+// How many letters to reveal
+this_many_letters = jsPsych.randomization.repeat([0,4], 15);
+this_many_letters_practice = jsPsych.randomization.repeat([0,4], 2);
 
 // Trials
 
@@ -118,7 +121,7 @@ var JOS_anagram = {
     data: {trial_name: "present_anagram"},
     stimulus: function(){
       
-            reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 3)
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters[trialnum])
       primed_array = [];
         if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
         if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
@@ -135,6 +138,7 @@ var JOS_anagram = {
     trial_duration: 2000,
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.preview_no = this_many_letters[trialnum];
     }
   },
   {
@@ -148,6 +152,7 @@ var JOS_anagram = {
     trial_duration: 8000,
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.preview_no = this_many_letters[trialnum];
       data.item_index = jsPsych.timelineVariable('item_index');
     }
   },
@@ -162,7 +167,7 @@ var JOS_anagram = {
     on_finish(data){
      data.free_response = data.response.Q0;
      data.trialnum = trialnum;
-
+      data.preview_no = this_many_letters[trialnum];
      trialnum = trialnum +1;
 
      if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
@@ -221,7 +226,7 @@ var Control_anagram = {
     data: {trial_name: "present_anagram"},
     stimulus: function(){
 
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 3)
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters[trialnum])
       primed_array = [];
         if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
         if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
@@ -238,6 +243,7 @@ var Control_anagram = {
     trial_duration: 2000,
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.preview_no = this_many_letters[trialnum];
     }
   },
   {
@@ -247,6 +253,7 @@ var Control_anagram = {
     choices: "NO_KEYS",
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.preview_no = this_many_letters[trialnum];
     },
     trial_duration: function(){
 
@@ -265,6 +272,7 @@ var Control_anagram = {
   on_finish(data){
    data.free_response = data.response.Q0;
    data.trialnum = trialnum;
+    data.preview_no = this_many_letters[trialnum];
    trialnum = trialnum +1;
 
    if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
@@ -314,10 +322,105 @@ var Control_anagram = {
 
 
 
+
+
+
+
+
+
+var practice_anagram= {
+  data: {phase: "practice", scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
+  timeline: [
+  {
+    type: jsPsychHtmlKeyboardResponse,
+    data: {trial_name: "present_anagram"},
+    stimulus: function(){
+
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters_practice[practice_trial])
+      primed_array = [];
+        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
+        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
+        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
+        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
+        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
+
+            primed_array = primed_array.join("");
+            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
+
+
+    },
+    choices: "NO_KEYS",
+    trial_duration: 2000,
+    on_finish: function(data){
+      data.trialnum = practice_trial;
+      data.preview_no = this_many_letters_practice[practice_trial];
+    }
+  },
+  {
+    type: jsPsychHtmlKeyboardResponse,
+    data: {trial_name: "wait"},
+    stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div>`,
+    choices: "NO_KEYS",
+    on_finish: function(data){
+      data.trialnum = trialnum;
+    },
+    trial_duration: 1000
+ },
+ {
+  type: jsPsychSurveyText,
+  data: {trial_name: "anagram_response"},
+  questions: [
+    {prompt: function(){
+      return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the splace blank and hit "Continue"')
+    }}
+    ],
+  on_finish(data){
+   data.free_response = data.response.Q0;
+   data.trialnum = practice_trial;
+   practice_trial = practice_trial +1;
+
+   if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
+ }
+},
+{
+  type: jsPsychHtmlKeyboardResponse,
+  choices: "NO_KEYS",
+  trial_duration: 1500,
+  stimulus: function(data){
+    if(jsPsych.data.get().last(1).values()[0].accuracy == 1){return "<p style = 'color: green;'>Correct!</p>" + "The correct answer was " + jsPsych.timelineVariable('unscrambled')} else {
+      return ("<p style = 'color: red;'>Wrong.</p>" + "The correct answer was " + jsPsych.timelineVariable('unscrambled'))
+    }
+  }
+}
+],
+  timeline_variables: [
+    { unscrambled: 'PRIZE', scrambled: 'ZEPIR'},
+    { unscrambled: 'INPUT', scrambled: 'TUNPI'},
+    { unscrambled: 'WORLD', scrambled: 'LOWDR'},
+    { unscrambled: 'HONEY', scrambled: 'YONEH'}
+
+    ],
+  }
+
+
+
+
+
+
+
+var begin_practice = {
+  type:   jsPsychInstructions,
+  pages: [
+    "You will now complete 5 practice items."
+    ],
+  show_clickable_nav: true,
+  allow_backward: false,
+}
+
 var begin = {
   type:   jsPsychInstructions,
   pages: [
-    "Press Next when you are ready to begin the task."
+    "Press Next when you are ready to begin the test. You will no longer receive feedback"
     ],
   show_clickable_nav: true,
   allow_backward: false,
@@ -355,8 +458,8 @@ var debug = {
 // Set Condition
 
 
-condition_control_timeline = [participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, estimation, begin, Control_anagram, debug, delete_yoked, save_OSF, DEBRIEF_SONA];
-condition_jos_timeline = [ participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, estimation, begin, JOS_anagram, debug, save_yoked_data, save_OSF, DEBRIEF_SONA];
+condition_control_timeline = [participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, begin_practice, practice_anagram, estimation, begin, Control_anagram, debug, delete_yoked, save_OSF, DEBRIEF_SONA];
+condition_jos_timeline = [ participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, begin_practice, practice_anagram, estimation, begin, JOS_anagram, debug, save_yoked_data, save_OSF, DEBRIEF_SONA];
 
 
 
