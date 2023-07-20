@@ -465,7 +465,7 @@ condition_jos_timeline = [participant_info_paid, participant_info_SONA, welcome,
 async function createExperiment(){
   const condition = await jsPsychPipe.getCondition("Gq06fVJZLYAM");
   if(condition == 0) { timeline = condition_control_timeline; }
-  if(condition == 1) { timeline = condition_jos_timeline; }
+  if(condition == 1) { timeline = condition_control_timeline; }
   jsPsych.run(timeline);
 }
 createExperiment();
