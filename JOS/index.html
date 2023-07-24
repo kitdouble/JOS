@@ -116,33 +116,6 @@ var JOS_anagram = {
   data: {scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
   timeline: [
   {
-    type: jsPsychHtmlKeyboardResponse,
-    data: {trial_name: "present_anagram"},
-    stimulus: function(data){
-      
-
-
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 0)
-        primed_array = [];
-        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
-        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
-        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
-        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
-        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
-
-            primed_array = primed_array.join("");
-            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
-
-
-    },
-    choices: "NO_KEYS",
-    trial_duration: 2000,
-    on_finish: function(data){
-      data.trialnum = trialnum;
-      data.preview_no = this_many_letters[trialnum-1];
-    }
-  },
-  {
     type: jsPsychHtmlSliderResponse,
     data: {trial_name: "JOS"},
     stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div><div style="width:500px;">
@@ -225,33 +198,6 @@ var Control_anagram = {
   timeline: [
   {
     type: jsPsychHtmlKeyboardResponse,
-    data: {trial_name: "present_anagram"},
-    stimulus: function(){
-
-           
-
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], 0)
-        primed_array = [];
-        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
-        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
-        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
-        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
-        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
-
-            primed_array = primed_array.join("");
-            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
-
-
-    },
-    choices: "NO_KEYS",
-    trial_duration: 2000,
-    on_finish: function(data){
-      data.trialnum = trialnum;
-      data.preview_no = this_many_letters[trialnum-1];
-    }
-  },
-  {
-    type: jsPsychHtmlKeyboardResponse,
     data: {trial_name: "wait"},
     stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div>`,
     choices: "NO_KEYS",
@@ -327,31 +273,6 @@ var Control_anagram = {
 var practice_anagram= {
   data: {phase: "practice", scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
   timeline: [
-  {
-    type: jsPsychHtmlKeyboardResponse,
-    data: {trial_name: "present_anagram"},
-    stimulus: function(){
-
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters_practice[practice_trial-1])
-      primed_array = [];
-        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
-        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
-        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
-        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
-        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
-
-            primed_array = primed_array.join("");
-            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
-
-
-    },
-    choices: "NO_KEYS",
-    trial_duration: 2000,
-    on_finish: function(data){
-      data.trialnum = practice_trial;
-      data.preview_no = this_many_letters_practice[practice_trial-1];
-    }
-  },
   {
     type: jsPsychHtmlKeyboardResponse,
     data: {trial_name: "wait"},
