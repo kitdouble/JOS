@@ -146,7 +146,7 @@ var anagram_trial = {
 
     },
     choices: "NO_KEYS",
-    trial_duration: 2000,
+    trial_duration: 0,
     on_finish: function(data){
       data.trialnum = trialnum;
     }
@@ -274,7 +274,7 @@ var practice_anagram= {
 
     },
     choices: "NO_KEYS",
-    trial_duration: 2000,
+    trial_duration: 0,
     on_finish: function(data){
       data.trialnum = practice_trial;
       data.preview_no = this_many_letters_practice[practice_trial-1];
