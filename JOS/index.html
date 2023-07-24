@@ -126,8 +126,6 @@ var JOS_anagram = {
     trial_duration: 8000,
     on_finish: function(data){
       data.trialnum = trialnum;
-      data.stim_array = primed_array;
-      data.preview_no = this_many_letters[trialnum-1];
       data.item_index = jsPsych.timelineVariable('item_index');
     }
   },
@@ -203,8 +201,6 @@ var Control_anagram = {
     choices: "NO_KEYS",
     on_finish: function(data){
       data.trialnum = trialnum;
-      data.stim_array = primed_array;
-      data.preview_no = this_many_letters[trialnum-1];
     },
     trial_duration: 2000
  },
