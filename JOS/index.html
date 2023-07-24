@@ -50,7 +50,7 @@
 // Initalise jsPsych
   const jsPsych = initJsPsych({
     on_finish: function(data) {
-      //jsPsych.data.get().localSave('csv','mydata.csv');
+     // jsPsych.data.get().localSave('csv','mydata.csv');
       if(jsPsych.data.get().select('accuracy').mean() < 0.10){window.location = attention_redirect_link} else {window.location = redirect_link}
 
      
@@ -72,7 +72,7 @@ var  practice_trial = 1;
 // Capture any url paramaters
  const PROLIFIC_PID = jsPsych.data.getURLVariable('PROLIFIC_PID');
  const SONA_PID = jsPsych.data.getURLVariable('id');
-
+  jsPsych.data.addProperties({participant_id: PROLIFIC_PID});
 
   // Save to OSF
  const subject_id = jsPsych.randomization.randomID(10);
@@ -83,7 +83,7 @@ var  practice_trial = 1;
  const save_OSF = {
   type: jsPsychPipe,
   action: "save",
-  experiment_id: "5tr5cgwzGxLN",
+  experiment_id: "HPxOsPqT0eOh",
   filename: filename,
   data_string: ()=>jsPsych.data.get().csv()
 };
@@ -100,47 +100,102 @@ var instructions = {
     type: jsPsychInstructions,
     pages: [
     '<h2>Instructions</h2>In this study you will be shown a 5-letter English word that has been scrambled (an anagram).<br>Your job is to try and rearrange it to make the original word.',
-    'For example, if you are shown the string:<br><strong>AEROP</strong><br><nr> Rearrange it to make a word that make sense in English<br>In this case you would type in the unscrambled word:<br><strong>OPERA</strong>'
+    'For example, if you are shown the string:<br><strong>AEROP</strong><br><nr> Rearrange it to make a word that make sense in English<br>In this case you would type in the unscrambled word:<br><strong>OPERA</strong>',
+    'On some trials you will be asked to indicate how confident you are that you will be able to solve the anagram',
     ],
     show_clickable_nav: true
 }
 
 
-// How many letters to reveal
-this_many_letters = jsPsych.randomization.repeat([0,0], 15);
-this_many_letters_practice = jsPsych.randomization.repeat([0,0], 2);
+
+var factors = {
+    condition: ['JOS', 'NoJOS'],
+    preview_no: [0]
+}
+
+var full_design = jsPsych.randomization.factorial(factors, 15, true);
+
+
+
+
+this_many_letters_practice = jsPsych.randomization.repeat([0,4], 2);
 
 // Trials
 
-var JOS_anagram = {
-  data: {scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
+var anagram_trial = {
+  data: {scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled'), condition: jsPsych.timelineVariable('condition'), preview_no: jsPsych.timelineVariable('preview_no')},
   timeline: [
+  {
+    type: jsPsychHtmlKeyboardResponse,
+    data: {trial_name: "present_anagram"},
+    stimulus: function(data){
+      
+
+
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], jsPsych.timelineVariable('preview_no'))
+        primed_array = [];
+        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
+        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
+        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
+        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
+        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
+
+            primed_array = primed_array.join("");
+            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
+
+
+    },
+    choices: "NO_KEYS",
+    trial_duration: 2000,
+    on_finish: function(data){
+      data.trialnum = trialnum;
+    }
+  },
   {
     type: jsPsychHtmlSliderResponse,
     data: {trial_name: "JOS"},
     stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div><div style="width:500px;">
-    <p><br>How likely is it that you will solve this anagram?</p?</div>
+    <p><br>How confident are you that you will solve this anagram?</p?</div>
     </div>`,
     require_movement: true,
     labels: ["0%", "20%", '40%', '60%', "80%",'100%'],
-    trial_duration: 8000,
+     trial_duration: function(data){
+      if(jsPsych.timelineVariable('condition') == "JOS"){return 8000}
+      if(jsPsych.timelineVariable('condition') == "NoJOS"){return 0}
+    },
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.stim_array = primed_array;
       data.item_index = jsPsych.timelineVariable('item_index');
     }
   },
+    {
+    type: jsPsychHtmlKeyboardResponse,
+    data: {trial_name: "wait"},
+    stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div>`,
+    choices: "NO_KEYS",
+    on_finish: function(data){
+      data.trialnum = trialnum;
+      data.stim_array = primed_array;
+
+    },
+    trial_duration: function(data){
+      if(jsPsych.timelineVariable('condition') == "NoJOS"){return 3000}
+      if(jsPsych.timelineVariable('condition') == "JOS"){return 0}
+    }
+ },
   {
     type: jsPsychSurveyText,
       data: {trial_name: "anagram_response"},
     questions: [
       {prompt: function(){
-        return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the space blank and hit "Continue"')
+        return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the splace blank and hit "Continue"')
       }}
       ],
     on_finish(data){
      data.free_response = data.response.Q0;
+     data.JOS = jsPsych.data.get().last(3).values()[0].response;
      data.trialnum = trialnum;
-      data.preview_no = this_many_letters[trialnum-1];
      trialnum = trialnum +1;
 
      if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
@@ -149,118 +204,49 @@ var JOS_anagram = {
  }
  ],
   timeline_variables: [
-    { unscrambled: 'CHAIR', scrambled: 'CARIH', item_index: 0},
-    { unscrambled: 'GRIEF', scrambled: 'EFRGI', item_index: 1},
-    { unscrambled: 'TRICK', scrambled: 'TKICR', item_index: 2},
-    { unscrambled: 'FAITH', scrambled: 'HFATI', item_index: 3},
-    { unscrambled: 'MERCY', scrambled: 'YMERC', item_index: 4},
-    { unscrambled: 'GLORY', scrambled: 'ROLYG', item_index: 5},
-    { unscrambled: 'LOGIC', scrambled: 'LICGO', item_index: 6},
-    { unscrambled: 'BRICK', scrambled: 'RIKCB', item_index: 7},
-    { unscrambled: 'BLADE', scrambled: 'ELBDA', item_index: 8},
-    { unscrambled: 'BUNCH', scrambled: 'CUBNH', item_index: 9},
-    { unscrambled: 'THUMB', scrambled: 'BTUHM', item_index: 10},
-    { unscrambled: 'YOUTH', scrambled: 'TOHUY', item_index: 11},
-    { unscrambled: 'DEMON', scrambled: 'NDOEM', item_index: 12},
-    { unscrambled: 'BENCH', scrambled: 'HCBNE', item_index: 13},
-    { unscrambled: 'ALBUM', scrambled: 'LBAUM', item_index: 14},
-    { unscrambled: 'CROWD', scrambled: 'CWORD', item_index: 15},
-    { unscrambled: 'MAKER', scrambled: 'ERAMK', item_index: 16},
-    { unscrambled: 'PILOT', scrambled: 'TLIOP', item_index: 17},
-    { unscrambled: 'GLOVE', scrambled: 'VEGLO', item_index: 18},
-    { unscrambled: 'CRUSH', scrambled: 'RSCUH', item_index: 19},
-    { unscrambled: 'OUNCE', scrambled: 'CEONU', item_index: 20},
-    { unscrambled: 'CABLE', scrambled: 'LEACB', item_index: 21},
-    { unscrambled: 'MONTH', scrambled: 'HTOMN', item_index: 22},
-    { unscrambled: 'PORCH', scrambled: 'ROPCH', item_index: 23},
-    { unscrambled: 'MAJOR', scrambled: 'OMJRA', item_index: 24},
-    { unscrambled: 'DRINK', scrambled: 'KNRDI', item_index: 25},
-    { unscrambled: 'PITCH', scrambled: 'CIPHT', item_index: 26},
-    { unscrambled: 'WHEAT', scrambled: 'EAWTH', item_index: 27},
-    { unscrambled: 'STYLE', scrambled: 'TLSYE', item_index: 28},
-    { unscrambled: 'WOUND', scrambled: 'WOUDN', item_index: 29}
+    { unscrambled: 'CHAIR', scrambled: 'CARIH', item_index: 0, condition: full_design.condition[0], preview_no: full_design.preview_no[0]},
+    { unscrambled: 'GRIEF', scrambled: 'EFRGI', item_index: 1, condition: full_design.condition[1], preview_no: full_design.preview_no[1]},
+    { unscrambled: 'TRICK', scrambled: 'TKICR', item_index: 2, condition: full_design.condition[2], preview_no: full_design.preview_no[2]},
+    { unscrambled: 'FAITH', scrambled: 'HFATI', item_index: 3, condition: full_design.condition[3], preview_no: full_design.preview_no[3]},
+    { unscrambled: 'MERCY', scrambled: 'YMERC', item_index: 4, condition: full_design.condition[4], preview_no: full_design.preview_no[4]},
+    { unscrambled: 'GLORY', scrambled: 'ROLYG', item_index: 5, condition: full_design.condition[5], preview_no: full_design.preview_no[5]},
+    { unscrambled: 'LOGIC', scrambled: 'LICGO', item_index: 6, condition: full_design.condition[6], preview_no: full_design.preview_no[6]},
+    { unscrambled: 'BRICK', scrambled: 'RIKCB', item_index: 7, condition: full_design.condition[7], preview_no: full_design.preview_no[7]},
+    { unscrambled: 'BLADE', scrambled: 'ELBDA', item_index: 8, condition: full_design.condition[8], preview_no: full_design.preview_no[8]},
+    { unscrambled: 'BUNCH', scrambled: 'CUBNH', item_index: 9, condition: full_design.condition[9], preview_no: full_design.preview_no[9]},
+    { unscrambled: 'THUMB', scrambled: 'BTUHM', item_index: 10, condition: full_design.condition[10], preview_no: full_design.preview_no[10]},
+    { unscrambled: 'YOUTH', scrambled: 'TOHUY', item_index: 11, condition: full_design.condition[11], preview_no: full_design.preview_no[11]},
+    { unscrambled: 'DEMON', scrambled: 'NDOEM', item_index: 12, condition: full_design.condition[12], preview_no: full_design.preview_no[12]},
+    { unscrambled: 'BENCH', scrambled: 'HCBNE', item_index: 13, condition: full_design.condition[13], preview_no: full_design.preview_no[13]},
+    { unscrambled: 'ALBUM', scrambled: 'LBAUM', item_index: 14, condition: full_design.condition[14], preview_no: full_design.preview_no[14]},
+    { unscrambled: 'CROWD', scrambled: 'CWORD', item_index: 15, condition: full_design.condition[15], preview_no: full_design.preview_no[15]},
+    { unscrambled: 'MAKER', scrambled: 'ERAMK', item_index: 16, condition: full_design.condition[16], preview_no: full_design.preview_no[16]},
+    { unscrambled: 'PILOT', scrambled: 'TLIOP', item_index: 17, condition: full_design.condition[17], preview_no: full_design.preview_no[17]},
+    { unscrambled: 'GLOVE', scrambled: 'VEGLO', item_index: 18, condition: full_design.condition[18], preview_no: full_design.preview_no[18]},
+    { unscrambled: 'CRUSH', scrambled: 'RSCUH', item_index: 19, condition: full_design.condition[19], preview_no: full_design.preview_no[19]},
+    { unscrambled: 'OUNCE', scrambled: 'CEONU', item_index: 20, condition: full_design.condition[20], preview_no: full_design.preview_no[20]},
+    { unscrambled: 'CABLE', scrambled: 'LEACB', item_index: 21, condition: full_design.condition[21], preview_no: full_design.preview_no[21]},
+    { unscrambled: 'MONTH', scrambled: 'HTOMN', item_index: 22, condition: full_design.condition[22], preview_no: full_design.preview_no[22]},
+    { unscrambled: 'PORCH', scrambled: 'ROPCH', item_index: 23, condition: full_design.condition[23], preview_no: full_design.preview_no[23]},
+    { unscrambled: 'MAJOR', scrambled: 'OMJRA', item_index: 24, condition: full_design.condition[24], preview_no: full_design.preview_no[24]},
+    { unscrambled: 'DRINK', scrambled: 'KNRDI', item_index: 25, condition: full_design.condition[25], preview_no: full_design.preview_no[25]},
+    { unscrambled: 'PITCH', scrambled: 'CIPHT', item_index: 26, condition: full_design.condition[26], preview_no: full_design.preview_no[26]},
+    { unscrambled: 'WHEAT', scrambled: 'EAWTH', item_index: 27, condition: full_design.condition[27], preview_no: full_design.preview_no[27]},
+    { unscrambled: 'STYLE', scrambled: 'TLSYE', item_index: 28, condition: full_design.condition[28], preview_no: full_design.preview_no[28]},
+    { unscrambled: 'WOUND', scrambled: 'WOUDN', item_index: 29, condition: full_design.condition[29], preview_no: full_design.preview_no[29]}
 
     ],
-  randomize_order: true
+  randomize_order: true,
+    sample: {
+        type: 'without-replacement',
+        size: 1
+    }
 }
 
 
 
 
-
-
-
-
-var Control_anagram = {
-  data: {scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
-  timeline: [
-  {
-    type: jsPsychHtmlKeyboardResponse,
-    data: {trial_name: "wait"},
-    stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div>`,
-    choices: "NO_KEYS",
-    on_finish: function(data){
-      data.trialnum = trialnum;
-    },
-    trial_duration: 2000
- },
- {
-  type: jsPsychSurveyText,
-  data: {trial_name: "anagram_response"},
-  questions: [
-    {prompt: function(){
-      return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the space blank and hit "Continue"')
-    }}
-    ],
-  on_finish(data){
-   data.free_response = data.response.Q0;
-   data.trialnum = trialnum;
-    data.preview_no = this_many_letters[trialnum-1];
-   trialnum = trialnum +1;
-
-   if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
- }
-}
-],
-  timeline_variables: [
-    { unscrambled: 'CHAIR', scrambled: 'CARIH'},
-    { unscrambled: 'GRIEF', scrambled: 'EFRGI'},
-    { unscrambled: 'TRICK', scrambled: 'TKICR'},
-    { unscrambled: 'FAITH', scrambled: 'HFATI'},
-    { unscrambled: 'MERCY', scrambled: 'YMERC'},
-    { unscrambled: 'GLORY', scrambled: 'ROLYG'},
-    { unscrambled: 'LOGIC', scrambled: 'LICGO'},
-    { unscrambled: 'BRICK', scrambled: 'RIKCB'},
-    { unscrambled: 'BLADE', scrambled: 'ELBDA'},
-    { unscrambled: 'BUNCH', scrambled: 'CUBNH'},
-    { unscrambled: 'THUMB', scrambled: 'BTUHM'},
-    { unscrambled: 'YOUTH', scrambled: 'TOHUY'},
-    { unscrambled: 'DEMON', scrambled: 'NDOEM'},
-    { unscrambled: 'BENCH', scrambled: 'HCBNE'},
-    { unscrambled: 'ALBUM', scrambled: 'LBAUM'},
-    { unscrambled: 'CROWD', scrambled: 'CWORD'},
-    { unscrambled: 'MAKER', scrambled: 'ERAMK'},
-    { unscrambled: 'PILOT', scrambled: 'TLIOP'},
-    { unscrambled: 'GLOVE', scrambled: 'VEGLO'},
-    { unscrambled: 'CRUSH', scrambled: 'RSCUH'},
-    { unscrambled: 'OUNCE', scrambled: 'CEONU'},
-    { unscrambled: 'CABLE', scrambled: 'LEACB'},
-    { unscrambled: 'MONTH', scrambled: 'HTOMN'},
-    { unscrambled: 'PORCH', scrambled: 'ROPCH'},
-    { unscrambled: 'MAJOR', scrambled: 'OMJRA'},
-    { unscrambled: 'DRINK', scrambled: 'KNRDI'},
-    { unscrambled: 'PITCH', scrambled: 'CIPHT'},
-    { unscrambled: 'WHEAT', scrambled: 'EAWTH'},
-    { unscrambled: 'STYLE', scrambled: 'TLSYE'},
-    { unscrambled: 'WOUND', scrambled: 'WOUDN'}
-
-    ],
-    randomize_order: true
-}
-
-
-
-
+console.log()
 
 
 
@@ -269,6 +255,31 @@ var Control_anagram = {
 var practice_anagram= {
   data: {phase: "practice", scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
   timeline: [
+  {
+    type: jsPsychHtmlKeyboardResponse,
+    data: {trial_name: "present_anagram"},
+    stimulus: function(){
+
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters_practice[practice_trial-1])
+      primed_array = [];
+        if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
+        if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
+        if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
+        if(reveal_these_letters.includes(3)){primed_array[3] = jsPsych.timelineVariable('scrambled')[3]} else{primed_array[3] = "#"}
+        if(reveal_these_letters.includes(4)){primed_array[4] = jsPsych.timelineVariable('scrambled')[4]} else{primed_array[4] = "#"}
+
+            primed_array = primed_array.join("");
+            return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' + primed_array+ '</strong></div>')
+
+
+    },
+    choices: "NO_KEYS",
+    trial_duration: 2000,
+    on_finish: function(data){
+      data.trialnum = practice_trial;
+      data.preview_no = this_many_letters_practice[practice_trial-1];
+    }
+  },
   {
     type: jsPsychHtmlKeyboardResponse,
     data: {trial_name: "wait"},
@@ -284,7 +295,7 @@ var practice_anagram= {
   data: {trial_name: "anagram_response"},
   questions: [
     {prompt: function(){
-      return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the space blank and hit "Continue"')
+      return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the splace blank and hit "Continue"')
     }}
     ],
   on_finish(data){
@@ -367,28 +378,15 @@ var debug = {
 
 
 
+  jsPsych.run([ participant_info_paid, participant_info_SONA, instructions, begin_practice, practice_anagram, estimation, begin, anagram_trial, debug, save_OSF, DEBRIEF_SONA]);
 
-// Set Condition
 
-
-condition_control_timeline = [participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, begin_practice, practice_anagram, estimation, begin, Control_anagram, debug, save_OSF, DEBRIEF_SONA];
-condition_jos_timeline = [participant_info_paid, participant_info_SONA, welcome, demographics,  instructions, begin_practice, practice_anagram, estimation,  begin, JOS_anagram, debug, save_OSF, DEBRIEF_SONA];
 
 
 
 //
 
-async function createExperiment(){
-  const condition = await jsPsychPipe.getCondition("5tr5cgwzGxLN");
-  if(condition == 0) { timeline = condition_control_timeline; }
-  if(condition == 1) { timeline = condition_jos_timeline; }
-  jsPsych.run(timeline);
-}
-createExperiment();
-
-
-
-
+//
 
 
 //welcome, demographics
