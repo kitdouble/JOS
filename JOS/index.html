@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>USYD Metacognition</title>
-  <link rel="icon" type="image/x-icon" href="assets/logo.ico">
-
-  <!-- Load jsPsych and jquery-->
-  <script src="https://unpkg.com/jspsych@7.2.1"></script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+jquery.min.js'></script>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.2/js/foundation.min.js'></script>
   <link href="https://unpkg.com/jspsych@7.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
 
@@ -116,9 +108,11 @@ var factors = {
 var full_design = jsPsych.randomization.factorial(factors, 15, true);
 
 
+var practice_design = jsPsych.randomization.factorial(factors, 2, true);
 
 
-this_many_letters_practice = jsPsych.randomization.repeat([0,0], 2);
+
+
 
 // Trials
 
@@ -236,32 +230,31 @@ var anagram_trial = {
     { unscrambled: 'WOUND', scrambled: 'WOUDN', item_index: 29, condition: full_design.condition[29], preview_no: full_design.preview_no[29]}
 
     ],
-  randomize_order: true,
-    sample: {
-        type: 'without-replacement',
-        size: 1
-    }
+  randomize_order: true
 }
 
 
 
 
-console.log()
 
 
 
 
 
-var practice_anagram= {
-  data: {phase: "practice", scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled')},
+
+
+var practice_anagram = {
+  data: {phase: "practice", scramble_anagram: jsPsych.timelineVariable('scrambled'), uncrambled_anagram: jsPsych.timelineVariable('unscrambled'), condition: jsPsych.timelineVariable('condition'), preview_no: jsPsych.timelineVariable('preview_no')},
   timeline: [
   {
     type: jsPsychHtmlKeyboardResponse,
     data: {trial_name: "present_anagram"},
-    stimulus: function(){
+    stimulus: function(data){
+      
 
-      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], this_many_letters_practice[practice_trial-1])
-      primed_array = [];
+
+      reveal_these_letters = jsPsych.randomization.sampleWithoutReplacement([0,1,2,3,4], jsPsych.timelineVariable('preview_no'))
+        primed_array = [];
         if(reveal_these_letters.includes(0)){primed_array[0] = jsPsych.timelineVariable('scrambled')[0]} else{primed_array[0] = "#"}
         if(reveal_these_letters.includes(1)){primed_array[1] = jsPsych.timelineVariable('scrambled')[1]} else{primed_array[1] = "#"}
         if(reveal_these_letters.includes(2)){primed_array[2] = jsPsych.timelineVariable('scrambled')[2]} else{primed_array[2] = "#"}
@@ -276,55 +269,70 @@ var practice_anagram= {
     choices: "NO_KEYS",
     trial_duration: 0,
     on_finish: function(data){
-      data.trialnum = practice_trial;
-      data.preview_no = this_many_letters_practice[practice_trial-1];
+      data.trialnum = trialnum;
     }
   },
   {
+    type: jsPsychHtmlSliderResponse,
+    data: {trial_name: "JOS"},
+    stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div><div style="width:500px;">
+    <p><br>How confident are you that you will solve this anagram?</p?</div>
+    </div>`,
+    require_movement: true,
+    labels: ["0%", "20%", '40%', '60%', "80%",'100%'],
+     trial_duration: function(data){
+      if(jsPsych.timelineVariable('condition') == "JOS"){return 8000}
+      if(jsPsych.timelineVariable('condition') == "NoJOS"){return 0}
+    },
+    on_finish: function(data){
+      data.trialnum = trialnum;
+      data.stim_array = primed_array;
+      data.item_index = jsPsych.timelineVariable('item_index');
+    }
+  },
+    {
     type: jsPsychHtmlKeyboardResponse,
     data: {trial_name: "wait"},
     stimulus: `<div style = "position: absolute; top: 25%; left: 48.5%"><strong>#####</strong></div>`,
     choices: "NO_KEYS",
     on_finish: function(data){
       data.trialnum = trialnum;
+      data.stim_array = primed_array;
+
     },
-    trial_duration: 1000
- },
- {
-  type: jsPsychSurveyText,
-  data: {trial_name: "anagram_response"},
-  questions: [
-    {prompt: function(){
-      return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the splace blank and hit "Continue"')
-    }}
-    ],
-  on_finish(data){
-   data.free_response = data.response.Q0;
-   data.trialnum = practice_trial;
-   practice_trial = practice_trial +1;
-
-   if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
- }
-},
-{
-  type: jsPsychHtmlKeyboardResponse,
-  choices: "NO_KEYS",
-  trial_duration: 1500,
-  stimulus: function(data){
-    if(jsPsych.data.get().last(1).values()[0].accuracy == 1){return "<p style = 'color: green;'>Correct!</p>" + "The correct answer was " + jsPsych.timelineVariable('unscrambled')} else {
-      return ("<p style = 'color: red;'>Wrong.</p>" + "The correct answer was " + jsPsych.timelineVariable('unscrambled'))
+    trial_duration: function(data){
+      if(jsPsych.timelineVariable('condition') == "NoJOS"){return 3000}
+      if(jsPsych.timelineVariable('condition') == "JOS"){return 0}
     }
-  }
-}
-],
+ },
+  {
+    type: jsPsychSurveyText,
+      data: {trial_name: "anagram_response"},
+    questions: [
+      {prompt: function(){
+        return('<div style = "position: absolute; top: 25%; left: 48.5%"><strong>' +jsPsych.timelineVariable('scrambled') + '</strong></div>Unscrambled the letters to make an English word and type it below:<br>If you do not know, simply leave the splace blank and hit "Continue"')
+      }}
+      ],
+    on_finish(data){
+     data.free_response = data.response.Q0;
+     data.JOS = jsPsych.data.get().last(3).values()[0].response;
+     data.trialnum = trialnum;
+     trialnum = trialnum +1;
+
+     if(data.response.Q0.toUpperCase() == jsPsych.timelineVariable('unscrambled').toUpperCase()){data.accuracy = 1} else (data.accuracy = 0)
+
+   }
+ }
+ ],
   timeline_variables: [
-    { unscrambled: 'PRIZE', scrambled: 'ZEPIR'},
-    { unscrambled: 'INPUT', scrambled: 'TUNPI'},
-    { unscrambled: 'WORLD', scrambled: 'LOWDR'},
-    { unscrambled: 'HONEY', scrambled: 'YONEH'}
+    { unscrambled: 'PRIZE', scrambled: 'ZEPIR', item_index: 0, condition: practice_design.condition[0], preview_no: practice_design.preview_no[0]},
+    { unscrambled: 'INPUT', scrambled: 'TUNPI', item_index: 1, condition: practice_design.condition[1], preview_no: practice_design.preview_no[1]},
+    { unscrambled: 'WORLD', scrambled: 'LOWDR', item_index: 2, condition: practice_design.condition[2], preview_no: practice_design.preview_no[2]},
+    { unscrambled: 'HONEY', scrambled: 'YONEH', item_index: 3, condition: practice_design.condition[3], preview_no: practice_design.preview_no[3]}
 
     ],
-  }
+  randomize_order: true
+}
 
 
 
